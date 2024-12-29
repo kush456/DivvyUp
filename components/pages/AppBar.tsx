@@ -38,26 +38,7 @@ const AppBar = () => {
                     </nav>
                 </div>
             </header>
-            {/* App Bar
-            <header className="bg-white shadow">
-            <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-                <h1 className="text-xl font-bold text-gray-700">DivvyUp</h1>
-                <nav className="flex items-center space-x-6">
-                <Button variant="link" >
-                    Dashboard
-                </Button>
-                <Button variant="link" >
-                    New Expense
-                </Button>
-                <Button variant="link" >
-                    Groups
-                </Button>
-                <Avatar>
-                    <AvatarImage src="/images/default-user.jpg" alt="User Avatar" />
-                </Avatar>
-                </nav>
-            </div>
-            </header> */}
+            
         </div>
     )
 }

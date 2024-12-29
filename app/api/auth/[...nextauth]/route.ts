@@ -1,4 +1,4 @@
-import NextAuth from "next-auth";
+import NextAuth, { NextAuthOptions } from "next-auth";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { PrismaClient } from "@prisma/client";
 import CredentialsProvider from "next-auth/providers/credentials";
@@ -7,7 +7,7 @@ import bcrypt from "bcrypt";
 
 const prisma = new PrismaClient();
 
-const handler = NextAuth({
+export const authOptions : NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
   providers: [
     CredentialsProvider({
@@ -23,6 +23,7 @@ const handler = NextAuth({
         });
 
         if (!user) {
+          console.log("User not found");
           throw new Error("No user found with the given email.");
         } else{
           console.log("user found");
@@ -39,8 +40,9 @@ const handler = NextAuth({
         }
 
         return {
-          id: "1",
+          id: user.id.toString(), 
           email: user.email,
+          name: user.name,
           password: user.password
         };
       },
@@ -50,16 +52,22 @@ const handler = NextAuth({
     strategy: "jwt",
   },
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user } : any) {
+      // console.log("jwt token", token);
+      // console.log("user", user);
+    
       if (user) {
-        console.log(user.id);
-        token.id = user.id;
+        //console.log(user.id);
+        token.id = token.sub; //not working btw
       }
       return token;
     },
     async session({ session, token } : any) { //do check if id aa rha h ya nhi, wo type any krna tha yaha 
       if (token) {
-        session.user.id = token.id as string;
+        //console.log("token is ", token);
+        session.user.id = token.sub as string;
+        //console.log("session is ");
+        console.log(session);
       }
       return session;
     },
@@ -69,6 +77,8 @@ const handler = NextAuth({
   },
   secret: process.env.NEXTAUTH_SECRET,
 
-});
+};
 
-export {handler as GET, handler as POST};
+const handler = NextAuth(authOptions) ;
+export const GET = handler;
+export const POST = handler;

@@ -21,10 +21,11 @@ model User {
   friends    Friend[]  @relation("UserIsFriend") // Updated relation name
   friendOf   Friend[]  @relation("FriendOfUser") // New relation for "friendId"
   groups     Group[]   @relation("GroupMemberships")
-  expenses   Expense[] @relation("UserExpenses")
   settlementsPayer   Settlement[] @relation("SettlementPayer") // Settlements as a payer
   settlementsPayee   Settlement[] @relation("SettlementPayee") // Settlements as a payee
   participants Participant[]
+  sentFriendRequests  FriendRequest[]  @relation("SenderRequests")
+  receivedFriendRequests FriendRequest[] @relation("ReceiverRequests")
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
 }
@@ -40,6 +41,18 @@ model Friend {
   @@unique([userId, friendId]) // Prevents duplicate friendships
 }
 
+model FriendRequest {
+  id         Int      @id @default(autoincrement())
+  senderId   Int
+  receiverId Int
+  sender     User     @relation("SenderRequests", fields: [senderId], references: [id])
+  receiver   User     @relation("ReceiverRequests", fields: [receiverId], references: [id])
+  status     String   @default("pending") // Can be 'pending', 'accepted', or 'rejected'
+  createdAt  DateTime @default(now())
+
+  @@unique([senderId, receiverId]) // Prevents duplicate requests
+}
+
 model Group {
   id        Int       @id @default(autoincrement())
   name      String
@@ -51,10 +64,9 @@ model Group {
 
 model Expense {
   id          Int       @id @default(autoincrement())
-  amount      Float
+  totalAmount Float
   description String
-  payerId     Int
-  payer       User      @relation("UserExpenses", fields: [payerId], references: [id])
+  splitType   String
   groupId     Int?
   group       Group?    @relation("GroupExpenses", fields: [groupId], references: [id])
   participants Participant[]
@@ -66,6 +78,7 @@ model Participant {
   expenseId  Int
   userId     Int
   weight     Float
+  paidAmount Float
   expense    Expense @relation(fields: [expenseId], references: [id])
   user       User    @relation(fields: [userId], references: [id])
 
