@@ -43,17 +43,78 @@ export async function POST(req : Request){
 
         const settlements = minimizeDebts(balances);
 
-        //now save the settlement to the db
+        // Handle settlement creation or update with swapping logic
         const settlementRecords = await Promise.all(
-            settlements.map((settlement) =>
-                prisma.settlement.create({
+            settlements.map(async (settlement) => {
+            const existingSettlement = await prisma.settlement.findFirst({
+                where: {
+                payerId: settlement.payerId,
+                payeeId: settlement.payeeId,
+                },
+            });
+    
+            if (existingSettlement) {
+                // Update existing settlement
+                const updatedAmount = existingSettlement.amount + settlement.amount;
+    
+                if (updatedAmount < 0) {
+                // If the amount becomes negative, swap payer and payee and set positive amount
+                return prisma.settlement.update({
+                    where: { id: existingSettlement.id },
+                    data: {
+                    payerId: settlement.payeeId,
+                    payeeId: settlement.payerId,
+                    amount: Math.abs(updatedAmount),
+                    },
+                });
+                } else {
+                // Otherwise, just update the amount
+                return prisma.settlement.update({
+                    where: { id: existingSettlement.id },
+                    data: { amount: updatedAmount },
+                });
+                }
+            } else {
+                // Check for reverse settlement
+                const reverseSettlement = await prisma.settlement.findFirst({
+                where: {
+                    payerId: settlement.payeeId,
+                    payeeId: settlement.payerId,
+                },
+                });
+    
+                if (reverseSettlement) {
+                const updatedAmount = reverseSettlement.amount - settlement.amount;
+    
+                if (updatedAmount < 0) {
+                    // Swap payer and payee and set positive amount
+                    return prisma.settlement.update({
+                    where: { id: reverseSettlement.id },
                     data: {
                         payerId: settlement.payerId,
                         payeeId: settlement.payeeId,
-                        amount: settlement.amount,
+                        amount: Math.abs(updatedAmount),
                     },
-                })
-            )
+                    });
+                } else {
+                    // Otherwise, just update the amount
+                    return prisma.settlement.update({
+                    where: { id: reverseSettlement.id },
+                    data: { amount: updatedAmount },
+                    });
+                }
+                } else {
+                // Create a new settlement if no existing or reverse settlement found
+                return prisma.settlement.create({
+                    data: {
+                    payerId: settlement.payerId,
+                    payeeId: settlement.payeeId,
+                    amount: settlement.amount,
+                    },
+                });
+                }
+            }
+            })
         );
 
         console.log("settlements ", settlementRecords);
