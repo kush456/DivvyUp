@@ -57,36 +57,39 @@ export async function getExpenses(session : Session){
     }
 }
 
-// export async function getSettlementDetails(session: Session){
-//     const userId = parseInt(session.user.id || "0");
-//     //console.log(session);
-//     //console.log("userId: " + userId);
-//     if(userId === 0) return redirect("/api/auth/signin");
+export async function getSettlementDetails(session: Session){
+    const userId = parseInt(session.user.id || "0");
+    //console.log(session);
+    //console.log("userId: " + userId);
+    if(userId === 0) return redirect("/api/auth/signin");
+    try{
+        
+        const credits = await prisma.settlement.findMany({
+            where: {
+                payeeId: userId
+            }, 
+            include : {
+                payer: true
+            }
+        })  
+        
+        const debts = await prisma.settlement.findMany({
+            where: {
+                payerId: userId
+            },
+            include : {
+                payee: true
+            }
+        })
 
-//     try{
-//         const credits = await prisma.settlement.findMany({
-//             where: {
-//                 payeeId: userId
-//             }
-//         })
-//     } catch(error){
-//         console.error("Error fetching settlement details:", error);
-//         throw new Error("Failed to fetch settlement details");
-//     }
-
-//     try{
-//         const debts = await prisma.settlement.findMany({
-//             where: {
-//                 payerId: userId
-//             }
-//         })
-//     } catch(error){
-//         console.error("Error fetching settlement details:", error);
-//         throw new Error("Failed to fetch settlement details");
-//     }
-
-    
-// }
+        return {credits, debts};
+        
+    }catch(error){
+        console.error("Error fetching settlement details:", error);
+        throw new Error("Failed to fetch settlement details");
+    }
+        
+}
 export default async function(){
 
     const session = await getServerSession(authOptions);
@@ -97,10 +100,11 @@ export default async function(){
     }
 
     const expenseDetails = await getExpenses(session);
+    const balanceDetails = await getSettlementDetails(session);
 
     return(
         <div>
-            <ExpensesPage expenses={expenseDetails}/>
+            <ExpensesPage expenses={expenseDetails} balances={balanceDetails}/>
         </div>
     )
 }

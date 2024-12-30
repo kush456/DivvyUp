@@ -8,6 +8,7 @@ import AppBar from "../AppBar";
 import { Button } from "@/components/ui/button";
 import OweOwedDialog from "@/components/popups/OweOwed";
 import ExpenseDetailsDialog from "@/components/popups/ExpenseDetails";
+import { useRouter } from "next/navigation";
 
 
 
@@ -25,28 +26,43 @@ type Expenses = {
     }[];
 };
 
-type ExpensePageProps = {
-    expenses: Expenses[];
-}
-
-const dummyBalances = {
-    youOwe: [
-      { id: 1, name: "Josh Miller", avatar: "/avatar1.png", amount: "$10.00" },
-      { id: 2, name: "Sam Davis", avatar: "/avatar2.png", amount: "$20.00" },
-      { id: 3, name: "Emma Stone", avatar: "/avatar3.png", amount: "$15.00" },
-    ],
-    youAreOwed: [
-      { id: 1, name: "Liam Brown", avatar: "/avatar4.png", amount: "$30.00" },
-      { id: 2, name: "Sophia Green", avatar: "/avatar5.png", amount: "$25.00" },
-      { id: 3, name: "Olivia Black", avatar: "/avatar6.png", amount: "$50.00" },
-    ],
+type User = {
+    name: string;
+    id: number;
+    email: string;
+    password: string;
+    createdAt: Date;
+    updatedAt: Date;
 };
 
-export default function ExpensesPage({expenses} : ExpensePageProps) {
+type Settlement = {
+    id: number;
+    groupId: number | null;
+    createdAt: Date;
+    amount: number;
+    payerId: number;
+    payeeId: number;
+    payer?: User;
+    payee?: User;
+}
+
+type BalanceDetails = {
+    credits : Settlement[];
+    debts : Settlement[];
+}
+type ExpenseProps = {
+    expenses: Expenses[];
+    balances: BalanceDetails;
+};
+
+
+
+export default function ExpensesPage({expenses, balances} : ExpenseProps) {
     const [searchQuery, setSearchQuery] = useState("");
     const [isBalancesDialogOpen, setIsBalancesDialogOpen] = useState(false);
     const [isExpensesDialogOpen, setIsExpensesDialogOpen] = useState(false);
     const [selectedExpense, setSelectedExpense] = useState<Expenses | null>(null);
+    const router = useRouter();
 
     const handleExpenseClick = (expense: Expenses) => {
         setSelectedExpense(expense);
@@ -68,18 +84,16 @@ export default function ExpensesPage({expenses} : ExpensePageProps) {
                 <div className="mb-6">
                 <h3 className="text-lg font-bold">You owe</h3>
                 <div className="space-y-4">
-                    {dummyBalances.youOwe.map((person) => (
-                    <div key={person.id} className="flex items-center space-x-4">
+                    {balances.debts.map((debt) => (
+                    <div key={debt.id} className="flex items-center space-x-4">
                         <Avatar>
-                        <img
-                            src={person.avatar}
-                            alt={person.name}
-                            className="w-10 h-10 rounded-full"
-                        />
+                            <div className="bg-gray-200 w-8 h-8 rounded-full flex items-center justify-center">
+                                {(debt.payee) ? debt.payee.name[0].toUpperCase() : 'NA'}
+                            </div>
                         </Avatar>
                         <div>
-                        <p className="text-sm font-medium">@{person.name}</p>
-                        <p className="text-sm text-gray-500">{person.amount}</p>
+                            <p className="text-sm font-medium">{(debt.payee) ? debt.payee.name : "NA"}</p>
+                            <p className="text-sm text-gray-500">{debt.amount}</p>
                         </div>
                     </div>
                     ))}
@@ -88,18 +102,16 @@ export default function ExpensesPage({expenses} : ExpensePageProps) {
                 <div>
                 <h3 className="text-lg font-bold">You are owed</h3>
                 <div className="space-y-4">
-                    {dummyBalances.youAreOwed.map((person) => (
-                    <div key={person.id} className="flex items-center space-x-4">
+                    {balances.credits.map((credit) => (
+                    <div key={credit.id} className="flex items-center space-x-4">
                         <Avatar>
-                        <img
-                            src={person.avatar}
-                            alt={person.name}
-                            className="w-10 h-10 rounded-full"
-                        />
+                            <div className="bg-gray-200 w-8 h-8 rounded-full flex items-center justify-center">
+                                {(credit.payer) ? credit.payer.name[0].toUpperCase() : 'NA'}
+                            </div>
                         </Avatar>
                         <div>
-                        <p className="text-sm font-medium">@{person.name}</p>
-                        <p className="text-sm text-gray-500">{person.amount}</p>
+                            <p className="text-sm font-medium">{(credit.payer) ? credit.payer.name : 'NA'}</p>
+                            <p className="text-sm text-gray-500">{credit.amount}</p>
                         </div>
                     </div>
                     ))}
@@ -110,14 +122,20 @@ export default function ExpensesPage({expenses} : ExpensePageProps) {
             {/* Right Section */}
             <div className="flex-1 min-w-[280px]">
                 <div className="mb-6">
-                <h2 className="text-2xl font-bold">Expenses</h2>
-                <Input
-                    type="text"
-                    placeholder="Search expenses"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="mt-4 w-full"
-                />
+                    <div className="mb-6 flex items-center justify-between">
+                        <h2 className="text-2xl font-bold">Expenses</h2>
+                        <Button onClick={() => {router.push('./expenses/addExpenses')}}>
+                            Add Expense
+                        </Button>
+                    </div>
+                
+                    <Input
+                        type="text"
+                        placeholder="Search expenses"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="mt-4 w-full"
+                    />
                 </div>
                 <div className="space-y-4">
                 {filteredExpenses.map((expense) => (
