@@ -1,4 +1,5 @@
 // ./popups/OweOwed.tsx
+//this is not a popup but here you can have the left section to reuse for both the expenses and groups page
 "use client";
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";

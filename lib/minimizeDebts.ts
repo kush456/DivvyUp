@@ -1,3 +1,5 @@
+import { Participant, PrismaClient } from "@prisma/client";
+
 interface Balance {
     userId: number;
     amount: number;
@@ -8,6 +10,39 @@ interface Settlement {
     payeeId: number;
     amount: number;
 }
+
+interface Expense {
+    totalAmount : number,
+    description : string,
+    participants : Participant[],
+    splitType : string,
+    groupId : number
+}
+
+export function calculateGroupBalances(expense: Expense, currentBalances: Record<number, number>): Balance[] {
+    const totalWeight = expense.participants.reduce((sum, p) => sum + p.weight, 0);
+  
+    // Create a copy of current balances to calculate the updated balances
+    const updatedBalances = { ...currentBalances };
+  
+    expense.participants.forEach((participant) => {
+      const owedAmount = (participant.weight / totalWeight) * expense.totalAmount;
+      updatedBalances[participant.userId] =
+        (updatedBalances[participant.userId] || 0) +
+        (participant.paidAmount - owedAmount);
+    });
+  
+    // Convert the updated balances into an array for processing
+    return Object.entries(updatedBalances).map(([userId, amount]) => ({
+      userId: parseInt(userId, 10),
+      amount,
+    }));
+  }
+  
+
+// for full implementation of a group expense settlement calculation
+// const balances = calculateGroupBalances(expenses);
+// const settlements = minimizeDebts(balances);
 
 export default function minimizeDebts(balances: Balance[]): Settlement[] {
     const settlements: Settlement[] = [];

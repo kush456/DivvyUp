@@ -1,13 +1,64 @@
-import minimizeDebts from "@/lib/minimizeDebts";
+import minimizeDebts, { calculateGroupBalances } from "@/lib/minimizeDebts";
 import { PrismaClient } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 
 const prisma = new PrismaClient();
 
-export async function POST(req : Request){
-    const {totalAmount, description, participants, splitType} = await req.json();
 
+export async function POST(req : Request){
+    const {totalAmount, description, participants, splitType, groupId} = await req.json();
+
+    
     try{
+        //if a group expense
+        if (groupId) {
+            // Fetch existing group balances for the group
+            const existingBalances = await prisma.groupBalance.findMany({
+              where: { groupId },
+            });
+          
+            // Convert existing balances to a map for the function
+            const balanceMap: Record<number, number> = {};
+            existingBalances.forEach((b) => {
+              balanceMap[b.userId] = b.balance;
+            });
+          
+            // Calculate updated balances
+            const groupBalances = calculateGroupBalances(
+              {
+                totalAmount,
+                description,
+                participants,
+                splitType,
+                groupId,
+              },
+              balanceMap
+            );
+          
+            // Update the database using upsert
+            await Promise.all(
+                groupBalances.map(async (balance) => {
+                    await prisma.groupBalance.upsert({
+                        where: {
+                            groupId_userId: { // Use the compound unique key (groupId and userId)
+                                groupId,
+                                userId: balance.userId,
+                            },
+                        },
+                        update: {
+                            balance: { increment: balance.amount }, // Increment the balance by the calculated amount
+                        },
+                        create: {
+                            groupId,
+                            userId: balance.userId,
+                            balance: balance.amount, // Set the initial balance for a new record
+                        },
+                    });
+                })
+            );
+            
+        }
+        
         const expense = await prisma.expense.create({
             data : {
                 totalAmount,
@@ -48,8 +99,8 @@ export async function POST(req : Request){
             settlements.map(async (settlement) => {
             const existingSettlement = await prisma.settlement.findFirst({
                 where: {
-                payerId: settlement.payerId,
-                payeeId: settlement.payeeId,
+                    payerId: settlement.payerId,
+                    payeeId: settlement.payeeId,
                 },
             });
     

@@ -36,6 +36,7 @@ export default function AddExpenseForm({friends} : AddExpenseFormProps){
     const [description, setDescription] = useState<string>("");
     const [participants, setParticipants] = useState<Participant[]>([]);
     const [splitType, setSplitType] = useState<"equal" | "unequal">("equal");
+    const [groupId, selectedGroupId] = useState<number>(0);
     const {data : session} = useSession();
     const router = useRouter();
 
@@ -55,7 +56,7 @@ export default function AddExpenseForm({friends} : AddExpenseFormProps){
             email: user.email || "",
             avatar: user.image || "/images/default-avatar.jpg",
             balance: 0,
-            groups: [],
+            groups: [], //SOURCE OF ERROR MAYBE
         });
     }
 
@@ -112,6 +113,7 @@ export default function AddExpenseForm({friends} : AddExpenseFormProps){
             description,
             participants,
             splitType,
+            groupId: selectedGroupId || 0,
         };
 
         try {
@@ -119,7 +121,12 @@ export default function AddExpenseForm({friends} : AddExpenseFormProps){
             console.log("Expense added successfully: ", res.data);
 
             if(res) {
-                router.push("./");
+                if(groupId && groupId !== 0){
+                    router.push(`./group/${groupId}`);
+                } else{
+                    router.push("./");
+                }
+                
             }
         } catch (error : any){
             console.error("Error creating expense:", error.response?.data || error.message);

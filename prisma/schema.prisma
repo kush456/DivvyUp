@@ -21,8 +21,11 @@ model User {
   friends    Friend[]  @relation("UserIsFriend") // Updated relation name
   friendOf   Friend[]  @relation("FriendOfUser") // New relation for "friendId"
   groups     Group[]   @relation("GroupMemberships")
+  balances  GroupBalance[]  @relation("UserToBalances")
   settlementsPayer   Settlement[] @relation("SettlementPayer") // Settlements as a payer
   settlementsPayee   Settlement[] @relation("SettlementPayee") // Settlements as a payee
+  groupSettlementsPayer GroupSettlement[] @relation("GroupSettlementPayer") // Settlements as a pay
+  groupSettlementsPayee GroupSettlement[] @relation("GroupSettlementPayee") // Settlements as a payee
   participants Participant[]
   sentFriendRequests  FriendRequest[]  @relation("SenderRequests")
   receivedFriendRequests FriendRequest[] @relation("ReceiverRequests")
@@ -59,7 +62,32 @@ model Group {
   members   User[]    @relation("GroupMemberships")
   expenses  Expense[] @relation("GroupExpenses")
   settlements Settlement[]
+  balances    GroupBalance[]  @relation("GroupToBalances")
+  groupSettlements GroupSettlement[] @relation("GroupSettlement")
   createdAt DateTime  @default(now())
+}
+
+model GroupBalance {
+  id        Int     @id @default(autoincrement())
+  groupId   Int
+  group     Group   @relation(fields: [groupId], references: [id], name: "GroupToBalances")
+  userId    Int
+  user      User    @relation(fields: [userId], references: [id], name: "UserToBalances")
+  balance   Float   @default(0)
+
+  @@unique([groupId, userId]) //This helps us in where checks!!!!
+}
+
+model GroupSettlement {
+  id        Int      @id @default(autoincrement())
+  groupId   Int
+  payerId   Int
+  payeeId   Int
+  amount    Float
+  group     Group    @relation("GroupSettlement", fields: [groupId], references: [id])
+  payer     User     @relation("GroupSettlementPayer", fields: [payerId], references: [id])
+  payee     User     @relation("GroupSettlementPayee", fields: [payeeId], references: [id])
+  createdAt DateTime @default(now())
 }
 
 model Expense {
