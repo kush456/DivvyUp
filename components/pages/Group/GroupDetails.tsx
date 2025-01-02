@@ -8,65 +8,71 @@ import { Button } from "@/components/ui/button";
 import OweOwedDialog from "@/components/popups/OweOwed";
 import ExpenseDetailsDialog from "@/components/popups/ExpenseDetails";
 import { useRouter } from "next/navigation";
+import { GroupBalance, Participant, Settlement, User } from "@prisma/client";
+import { useSession } from "next-auth/react";
 
-// Dummy data
-const dummyGroupName = "Family Group";
-const dummyExpenses = [
-  {
-    id: 1,
-    description: "Lunch at the restaurant",
-    totalAmount: 100,
-    createdAt: new Date(),
-    participants: [
-      { userId: 1, name: "Alice", amount: 50, weight: 1 },
-      { userId: 2, name: "Bob", amount: 50, weight: 1 },
-    ],
-  },
-  {
-    id: 2,
-    description: "Movie tickets",
-    totalAmount: 60,
-    createdAt: new Date(),
-    participants: [
-      { userId: 1, name: "Alice", amount: 30, weight: 1 },
-      { userId: 3, name: "Charlie", amount: 30, weight: 1 },
-    ],
-  },
-];
-
-const dummyBalances = {
-  credits: [
-    { id: 1, amount: 50, payerId: 1, payeeId: 2, payer: { name: "Alice" }, payee: { name: "Bob" } },
-    { id: 2, amount: 30, payerId: 1, payeeId: 3, payer: { name: "Alice" }, payee: { name: "Charlie" } },
-  ],
-  debts: [
-    { id: 3, amount: 50, payerId: 2, payeeId: 1, payer: { name: "Bob" }, payee: { name: "Alice" } },
-    { id: 4, amount: 30, payerId: 3, payeeId: 1, payer: { name: "Charlie" }, payee: { name: "Alice" } },
-  ],
-};
-
-const dummyGroupMembers = [
-  { id: 1, name: "Alice" },
-  { id: 2, name: "Bob" },
-  { id: 3, name: "Charlie" },
-];
-
-//dummy groupId for now
-const groupId = 4;
-
-export default function GroupDetailsPage() {
+type Members = {
+  name: string;
+  id: number;
+  email: string;
+  password: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+type Expenses = {
+  id: number;
+  description: string;
+  totalAmount: number;
+  splitType: string;
+  createdAt: Date;
+  participants: Participant[];
+}
+type GroupSettlement = {
+  id: number;
+  amount: number;
+  payerId: number;
+  payeeId: number;
+  groupId: number;
+  createdAt: Date;
+  payer?: User;
+  payee?: User;
+}
+type Group = {
+  id : number;
+  name: String;
+  createdAt: Date;
+  members : Members[];
+  expenses: Expenses[];
+  settlements: Settlement[];
+  balances: GroupBalance[];
+  groupSettlements: GroupSettlement[];
+}
+type GroupDetailsProps = {
+  group : Group | null;
+}
+export default function GroupDetailsPage({group} : GroupDetailsProps) {
   const [searchQuery, setSearchQuery] = useState("");
-  const [isBalancesDialogOpen, setIsBalancesDialogOpen] = useState(false);
   const [isExpensesDialogOpen, setIsExpensesDialogOpen] = useState(false);
-  const [selectedExpense, setSelectedExpense] = useState<typeof dummyExpenses[0] | null>(null);
+  const [selectedExpense, setSelectedExpense] = useState<Expenses | null>(null);
   const router = useRouter();
+  const session = useSession();
 
-  const handleExpenseClick = (expense: typeof dummyExpenses[0]) => {
+  const IdOfUser = session.data?.user.id;
+  const userId = (IdOfUser) ? parseInt(IdOfUser, 10) : 0;
+
+  const credits = group?.groupSettlements.filter((settlement) => settlement.payeeId === userId);
+  const debts = group?.groupSettlements.filter((settlement) => settlement.payerId === userId);
+
+  if (!group) {
+    return <div className="min-h-screen bg-gray-50 flex items-center justify-center">Group not found</div>;
+  }
+
+  const handleExpenseClick = (expense: Expenses) => {
     setSelectedExpense(expense);
     setIsExpensesDialogOpen(true);
   };
 
-  const filteredExpenses = dummyExpenses.filter((expense) =>
+  const filteredExpenses = group.expenses.filter((expense) =>
     expense.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -76,7 +82,7 @@ export default function GroupDetailsPage() {
       <div className="container mx-auto mt-8 px-4">
         {/* Group Name */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold">{dummyGroupName}</h1>
+          <h1 className="text-3xl font-bold">{group.name}</h1>
         </div>
 
         <div className="flex flex-wrap gap-4 justify-between">
@@ -85,33 +91,34 @@ export default function GroupDetailsPage() {
             <div className="mb-6">
               <h3 className="text-lg font-bold">You owe</h3>
               <div className="space-y-4">
-                {dummyBalances.debts.map((debt) => (
+                {debts?.map((debt) => (
                   <div key={debt.id} className="flex items-center space-x-4">
                     <Avatar>
                       <div className="bg-gray-200 w-8 h-8 rounded-full flex items-center justify-center">
-                        {debt.payee?.name[0].toUpperCase()}
+                        {debt.payee?.name.toString()[0].toUpperCase()}
                       </div>
                     </Avatar>
                     <div>
-                      <p className="text-sm font-medium">{debt.payee?.name || "NA"}</p>
+                      <p className="text-sm font-medium">{debt.payee?.name}</p>
                       <p className="text-sm text-gray-500">{debt.amount}</p>
                     </div>
                   </div>
                 ))}
               </div>
             </div>
+
             <div>
               <h3 className="text-lg font-bold">You are owed</h3>
               <div className="space-y-4">
-                {dummyBalances.credits.map((credit) => (
+                {credits?.map((credit) => (
                   <div key={credit.id} className="flex items-center space-x-4">
                     <Avatar>
                       <div className="bg-gray-200 w-8 h-8 rounded-full flex items-center justify-center">
-                        {credit.payer?.name[0].toUpperCase()}
+                        {credit.payer?.name.toString()[0].toUpperCase()}
                       </div>
                     </Avatar>
                     <div>
-                      <p className="text-sm font-medium">{credit.payer?.name || "NA"}</p>
+                      <p className="text-sm font-medium">{credit.payer?.name}</p>
                       <p className="text-sm text-gray-500">{credit.amount}</p>
                     </div>
                   </div>
@@ -125,7 +132,7 @@ export default function GroupDetailsPage() {
             <div className="mb-6">
               <div className="mb-6 flex items-center justify-between">
                 <h2 className="text-2xl font-bold">Expenses</h2>
-                <Button onClick={() => router.push(`../expenses/addExpenses/${groupId}`)}>Add Expense</Button>
+                <Button onClick={() => router.push(`../expenses/addExpenses/${group.id}`)}>Add Expense</Button>
               </div>
               <Input
                 type="text"
@@ -181,7 +188,7 @@ export default function GroupDetailsPage() {
         <div className="mt-8">
           <h3 className="text-lg font-bold">Group Members</h3>
           <div className="space-y-4 mt-4">
-            {dummyGroupMembers.map((member) => (
+            {group.members.map((member) => (
               <div key={member.id} className="flex items-center space-x-4">
                 <Avatar>
                   <div className="bg-gray-200 w-8 h-8 rounded-full flex items-center justify-center">
@@ -196,15 +203,6 @@ export default function GroupDetailsPage() {
           </div>
         </div>
       </div>
-    
-      {/* <OweOwedDialog isOpen={isBalancesDialogOpen} onClose={() => setIsBalancesDialogOpen(false)} />
-      {selectedExpense && (
-        <ExpenseDetailsDialog
-          expense={selectedExpense}
-          isOpen={isExpensesDialogOpen}
-          onClose={() => setIsExpensesDialogOpen(false)}
-        />
-      )} */}
     </div>
   );
 }
