@@ -55,8 +55,8 @@ export default function AddExpenseForm({friends} : AddExpenseFormProps){
             name: user.name || "",
             email: user.email || "",
             avatar: user.image || "/images/default-avatar.jpg",
-            balance: 0,
-            groups: [], //SOURCE OF ERROR MAYBE
+            balance: 0, //fix or remove these
+            groups: [], //same as above
         });
     }
 

@@ -20,17 +20,23 @@ interface Expense {
 }
 
 export function calculateGroupBalances(expense: Expense, currentBalances: Record<number, number>): Balance[] {
+    console.log("data recieved by gbf: ", expense, currentBalances);
     const totalWeight = expense.participants.reduce((sum, p) => sum + p.weight, 0);
-  
+    
+    
     // Create a copy of current balances to calculate the updated balances
     const updatedBalances = { ...currentBalances };
   
     expense.participants.forEach((participant) => {
+      console.log("p userId ", participant.userId);
       const owedAmount = (participant.weight / totalWeight) * expense.totalAmount;
+      //if(updatedBalances[participant.userId] === undefined) updatedBalances[participant.userId] = 0;
       updatedBalances[participant.userId] =
         (updatedBalances[participant.userId] || 0) +
         (participant.paidAmount - owedAmount);
     });
+
+    console.log("updated balances: ", updatedBalances);
   
     // Convert the updated balances into an array for processing
     return Object.entries(updatedBalances).map(([userId, amount]) => ({

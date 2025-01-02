@@ -51,6 +51,9 @@ const dummyGroupMembers = [
   { id: 3, name: "Charlie" },
 ];
 
+//dummy groupId for now
+const groupId = 4;
+
 export default function GroupDetailsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isBalancesDialogOpen, setIsBalancesDialogOpen] = useState(false);
@@ -122,7 +125,7 @@ export default function GroupDetailsPage() {
             <div className="mb-6">
               <div className="mb-6 flex items-center justify-between">
                 <h2 className="text-2xl font-bold">Expenses</h2>
-                <Button onClick={() => router.push("./expenses/addExpense")}>Add Expense</Button>
+                <Button onClick={() => router.push(`../expenses/addExpenses/${groupId}`)}>Add Expense</Button>
               </div>
               <Input
                 type="text"
