@@ -7,17 +7,44 @@ import { Card } from "@/components/ui/card";
 import { Avatar } from "@/components/ui/avatar";
 import AppBar from "@/components/pages/AppBar";
 import { redirect, useRouter } from "next/navigation";
-import { Group } from "@prisma/client";
+import { useSession } from "next-auth/react";
+//import { Group } from "@prisma/client";
 
-//better way to get type directly from schema
-type GroupPageProps = {
-    groups: Group[];
+type Member = {
+  name: string;
+  id: number;
+  createdAt: Date;
+  email: string;
+  password: string;
+  updatedAt: Date;
+};
+
+type Group = {
+  name: string;
+  id: number;
+  createdAt: Date;
+  members: Member[]; // Added members to the Group type
+  balances: Balance[];
+};
+
+type Balance = {
+  id: number;
+  groupId: number;
+  userId: number;
+  balance: number;
 }
+
+type GroupPageProps = {
+  groups: Group[]; 
+};
 
 export default function GroupsPage({groups} : GroupPageProps) {
   const [searchQuery, setSearchQuery] = useState("");
+  const session = useSession();
   //const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
 
+  console.log("groups: ", groups);
+  //console.log("balance: ", balance);
   const filteredGroups = groups.filter((group) =>
     group.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -46,7 +73,7 @@ export default function GroupsPage({groups} : GroupPageProps) {
         <div>
           <h2 className="text-lg font-semibold mb-4">Your Groups</h2>
           <div className="space-y-4">
-            {filteredGroups.map((group) => (
+            {filteredGroups.map((group, balance) => (
               <Card
                 key={group.id}
                 className="p-4 flex items-center justify-between cursor-pointer"
@@ -61,10 +88,13 @@ export default function GroupsPage({groups} : GroupPageProps) {
                   <div>
                     <p className="font-medium">{group.name}</p>
                     <p className="text-sm text-gray-600">
-                      Members: "NA"
+                      Members: {(group.members.length > 0) ? group.members.length : 0}
                     </p>
                     <p className="text-sm text-gray-600">
-                      Balance: "NA"
+                      Balance: {(group.balances.
+                        filter(balance => balance.userId === parseInt(session.data?.user.id || "0")).
+                        map(balance => balance.balance)) || 0
+                        }
                     </p>
                   </div>
                 </div>
