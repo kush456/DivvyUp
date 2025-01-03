@@ -9,9 +9,12 @@ const prisma = new PrismaClient();
 
 export async function getGroupsDetails(session: Session){
     const userId = parseInt(session.user.id || "0");
-    //console.log(session);
+    //console.log("group mai session ", session);
     //console.log("userId: " + userId);
-    if(userId === 0) return redirect("/api/auth/signin");
+    if(userId === 0){
+        //console.log("group error");
+        return redirect("/api/auth/signin");
+    } 
     try{
         
         const groups = await prisma.group.findMany({

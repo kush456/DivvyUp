@@ -15,7 +15,11 @@ export async function getGroupDetails(groupId: number, session: Session){
           members: true,
           expenses: {
             include: {
-              participants: true,
+              participants: {
+                include : {
+                  user: true,
+                }
+              }
             },
           },
           balances: true,

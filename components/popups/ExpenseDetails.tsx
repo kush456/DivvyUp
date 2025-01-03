@@ -10,7 +10,7 @@ type ExpenseDetailsDialogProps = {
     description: string;
     totalAmount: number;
     createdAt: Date;
-    group: string | undefined;
+    group?: string | undefined;
     participants: {
       userId: number;
       name: string;

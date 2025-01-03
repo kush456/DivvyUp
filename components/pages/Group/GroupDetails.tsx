@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import OweOwedDialog from "@/components/popups/OweOwed";
 import ExpenseDetailsDialog from "@/components/popups/ExpenseDetails";
 import { useRouter } from "next/navigation";
-import { GroupBalance, Participant, Settlement, User } from "@prisma/client";
+import { GroupBalance, Settlement, User } from "@prisma/client";
 import { useSession } from "next-auth/react";
 
 type Members = {
@@ -18,6 +18,23 @@ type Members = {
   password: string;
   createdAt: Date;
   updatedAt: Date;
+}
+
+type Participant = {
+  user: {
+    id: number;
+    name: string;
+    createdAt: Date;
+    email: string;
+    password: string;
+    updatedAt: Date;
+  };
+  id : number;
+  expenseId : number;
+  userId : number;
+  paidAmount : number;
+  weight : number;
+  
 }
 type Expenses = {
   id: number;
@@ -39,7 +56,7 @@ type GroupSettlement = {
 }
 type Group = {
   id : number;
-  name: String;
+  name: string;
   createdAt: Date;
   members : Members[];
   expenses: Expenses[];
@@ -50,10 +67,25 @@ type Group = {
 type GroupDetailsProps = {
   group : Group | null;
 }
+type ExpenseDetailsProps = {
+  id: number;
+  description: string;
+  totalAmount: number;
+  splitType: string;
+  createdAt: Date;
+  group? : string | undefined;
+  participants: {
+    userId: number;
+    name: string;
+    amount: number;
+    weight: number;
+  }[];
+  
+}
 export default function GroupDetailsPage({group} : GroupDetailsProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [isExpensesDialogOpen, setIsExpensesDialogOpen] = useState(false);
-  const [selectedExpense, setSelectedExpense] = useState<Expenses | null>(null);
+  const [selectedExpense, setSelectedExpense] = useState<ExpenseDetailsProps | null>(null);
   const router = useRouter();
   const session = useSession();
 
@@ -67,14 +99,32 @@ export default function GroupDetailsPage({group} : GroupDetailsProps) {
     return <div className="min-h-screen bg-gray-50 flex items-center justify-center">Group not found</div>;
   }
 
-  const handleExpenseClick = (expense: Expenses) => {
-    setSelectedExpense(expense);
+  const handleExpenseClick = (detailedExpenses: ExpenseDetailsProps) => {
+    setSelectedExpense(detailedExpenses);
     setIsExpensesDialogOpen(true);
   };
 
   const filteredExpenses = group.expenses.filter((expense) =>
     expense.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const detailedExpenses: ExpenseDetailsProps[] = group.expenses.map((expense) => ({
+
+    id: expense.id,
+    description: expense.description,
+    totalAmount: expense.totalAmount,
+    splitType: expense.splitType,
+    createdAt: expense.createdAt,
+    group: group.name, 
+    participants: expense.participants.map((participant) => ({
+      userId: participant.userId,
+      name: participant.user.name,
+      amount: participant.paidAmount,
+      weight: participant.weight,
+    })),
+
+  }));
+  
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -143,7 +193,7 @@ export default function GroupDetailsPage({group} : GroupDetailsProps) {
               />
             </div>
             <div className="space-y-4">
-              {filteredExpenses.map((expense) => (
+              {detailedExpenses.map((expense) => (
                 <div
                   key={expense.id}
                   className="flex items-center justify-between p-4 bg-white shadow-sm rounded-lg"
@@ -203,6 +253,14 @@ export default function GroupDetailsPage({group} : GroupDetailsProps) {
           </div>
         </div>
       </div>
+      
+      {selectedExpense && (
+          <ExpenseDetailsDialog
+            expense={selectedExpense}
+            isOpen={isExpensesDialogOpen}
+            onClose={() => setIsExpensesDialogOpen(false)}
+          />
+      )}
     </div>
   );
 }
