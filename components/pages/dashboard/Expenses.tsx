@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import OweOwedDialog from "@/components/popups/OweOwed";
 import ExpenseDetailsDialog from "@/components/popups/ExpenseDetails";
 import { useRouter } from "next/navigation";
+import { ExpenseSettlement } from "@prisma/client";
 
 
 
@@ -53,19 +54,26 @@ type BalanceDetails = {
 type ExpenseProps = {
     expenses: Expenses[];
     balances: BalanceDetails;
+    expenseSettlementDetails: ExpenseSettlement[];
 };
 
 
 
-export default function ExpensesPage({expenses, balances} : ExpenseProps) {
+export default function ExpensesPage({expenses, balances, expenseSettlementDetails} : ExpenseProps) {
     const [searchQuery, setSearchQuery] = useState("");
     const [isBalancesDialogOpen, setIsBalancesDialogOpen] = useState(false);
     const [isExpensesDialogOpen, setIsExpensesDialogOpen] = useState(false);
     const [selectedExpense, setSelectedExpense] = useState<Expenses | null>(null);
+    const [selectedSettlements, setSelectedSettlements] = useState<ExpenseSettlement[]>([]);
     const router = useRouter();
 
     const handleExpenseClick = (expense: Expenses) => {
         setSelectedExpense(expense);
+        // Filter settlements for the selected expense
+        const filteredSettlements = expenseSettlementDetails.filter(
+            (settlement) => settlement.expenseId === expense.id
+        );
+        setSelectedSettlements(filteredSettlements);
         setIsExpensesDialogOpen(true);
     };
     
@@ -183,6 +191,7 @@ export default function ExpensesPage({expenses, balances} : ExpenseProps) {
             {selectedExpense && (
                 <ExpenseDetailsDialog
                 expense={selectedExpense}
+                settlementDetails={selectedSettlements}
                 isOpen={isExpensesDialogOpen}
                 onClose={() => setIsExpensesDialogOpen(false)}
                 />

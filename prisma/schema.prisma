@@ -26,6 +26,8 @@ model User {
   settlementsPayee   Settlement[] @relation("SettlementPayee") // Settlements as a payee
   groupSettlementsPayer GroupSettlement[] @relation("GroupSettlementPayer") // Settlements as a pay
   groupSettlementsPayee GroupSettlement[] @relation("GroupSettlementPayee") // Settlements as a payee
+  expenseSettlementsPayer ExpenseSettlement[] @relation("ExpenseSettlementPayer")
+  expenseSettlementsPayee ExpenseSettlement[] @relation("ExpenseSettlementPayee")
   participants Participant[]
   sentFriendRequests  FriendRequest[]  @relation("SenderRequests")
   receivedFriendRequests FriendRequest[] @relation("ReceiverRequests")
@@ -64,6 +66,7 @@ model Group {
   settlements Settlement[]
   balances    GroupBalance[]  @relation("GroupToBalances")
   groupSettlements GroupSettlement[] @relation("GroupSettlement")
+  expenseSettlements ExpenseSettlement[] @relation("GroupToExpenseSettlement") // Relation to ExpenseSettlement
   createdAt DateTime  @default(now())
 }
 
@@ -88,6 +91,8 @@ model GroupSettlement {
   payer     User     @relation("GroupSettlementPayer", fields: [payerId], references: [id])
   payee     User     @relation("GroupSettlementPayee", fields: [payeeId], references: [id])
   createdAt DateTime @default(now())
+
+  @@unique([payerId, payeeId, groupId])
 }
 
 model Expense {
@@ -98,6 +103,7 @@ model Expense {
   groupId     Int?
   group       Group?    @relation("GroupExpenses", fields: [groupId], references: [id])
   participants Participant[]
+  expenseSettlements ExpenseSettlement[] @relation("ExpenseSettlements") // Relation to ExpenseSettlement
   createdAt   DateTime  @default(now())
 }
 
@@ -123,4 +129,21 @@ model Settlement {
   groupId     Int?
   group       Group?   @relation(fields: [groupId], references: [id])
   createdAt   DateTime @default(now())
+}
+
+model ExpenseSettlement {
+  id         Int      @id @default(autoincrement())
+  expenseId  Int
+  payerId    Int
+  payeeId    Int
+  status     String   @default("unsettled")
+  groupId    Int?
+  group      Group?   @relation("GroupToExpenseSettlement", fields: [groupId], references: [id])
+  amount     Float
+  expense    Expense  @relation("ExpenseSettlements", fields: [expenseId], references: [id])
+  payer      User     @relation("ExpenseSettlementPayer", fields: [payerId], references: [id])
+  payee      User     @relation("ExpenseSettlementPayee", fields: [payeeId], references: [id])
+  createdAt  DateTime @default(now())
+
+  @@unique([expenseId, payerId, payeeId]) // Ensures unique settlements for an expense between specific users
 }

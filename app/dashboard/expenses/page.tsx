@@ -1,11 +1,23 @@
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import ExpensesPage from "@/components/pages/dashboard/Expenses";
-import { PrismaClient } from "@prisma/client";
+import { Expense, ExpenseSettlement, PrismaClient } from "@prisma/client";
 import { getServerSession, Session } from "next-auth";
 import { redirect } from "next/navigation";
 
 const prisma = new PrismaClient();
-
+type Expenses = {
+    id: number;
+    description: string;
+    totalAmount: number;
+    createdAt: Date;
+    group: string | undefined;
+    participants: {
+        userId: number;
+        name: string;
+        amount: number;
+        weight: number;
+    }[];
+};
 export async function getExpenses(session : Session){
     const userId = parseInt(session.user.id || "0");
     //console.log(session);
@@ -90,6 +102,37 @@ export async function getSettlementDetails(session: Session){
     }
         
 }
+
+export async function getExpenseSettlementDetails(session: Session, expenseDetails: Expenses[]){
+    const userId = parseInt(session.user.id || "0");
+    //console.log(session);
+    //console.log("userId: " + userId);
+    if(userId === 0) return redirect("/api/auth/signin");
+
+    try{
+        // Use Promise.all to resolve all promises returned by the map function
+        const settlements = await Promise.all(
+            expenseDetails.map((expense) =>
+                prisma.expenseSettlement.findMany({
+                    where: {
+                        expenseId: expense.id,
+                    },
+                    include: {
+                        payer: true,
+                        payee: true,
+                        expense: true,
+                        group: true,
+                    },
+                })
+            )
+        );
+        return settlements.flat();
+        
+    } catch(error){
+        console.error("Error fetching expense settlement details:", error);
+        throw new Error("Failed to fetch expense settlement details");
+    }
+}
 export default async function(){
 
     const session = await getServerSession(authOptions);
@@ -101,10 +144,12 @@ export default async function(){
 
     const expenseDetails = await getExpenses(session);
     const balanceDetails = await getSettlementDetails(session);
+    const expenseSettlementDetails = await getExpenseSettlementDetails(session, expenseDetails);
 
+    //console.log("set exp are : ", expenseSettlementDetails);
     return(
         <div>
-            <ExpensesPage expenses={expenseDetails} balances={balanceDetails}/>
+            <ExpensesPage expenses={expenseDetails} balances={balanceDetails} expenseSettlementDetails = {expenseSettlementDetails}/>
         </div>
     )
 }

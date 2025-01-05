@@ -8,8 +8,10 @@ import { Button } from "@/components/ui/button";
 import OweOwedDialog from "@/components/popups/OweOwed";
 import ExpenseDetailsDialog from "@/components/popups/ExpenseDetails";
 import { useRouter } from "next/navigation";
-import { GroupBalance, Settlement, User } from "@prisma/client";
+import { ExpenseSettlement, GroupBalance, Settlement, User } from "@prisma/client";
 import { useSession } from "next-auth/react";
+import axios from "axios";
+import { getExpenseSettlementDetails } from "@/app/dashboard/expenses/page";
 
 type Members = {
   name: string;
@@ -63,6 +65,7 @@ type Group = {
   settlements: Settlement[];
   balances: GroupBalance[];
   groupSettlements: GroupSettlement[];
+  expenseSettlementDetails: ExpenseSettlement[]; //ye wali wo hongi jisme id group ka match hota h, not user!
 }
 type GroupDetailsProps = {
   group : Group | null;
@@ -86,6 +89,7 @@ export default function GroupDetailsPage({group} : GroupDetailsProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [isExpensesDialogOpen, setIsExpensesDialogOpen] = useState(false);
   const [selectedExpense, setSelectedExpense] = useState<ExpenseDetailsProps | null>(null);
+  const [selectedSettlements, setSelectedSettlements] = useState<ExpenseSettlement[]>([]);
   const router = useRouter();
   const session = useSession();
 
@@ -95,12 +99,27 @@ export default function GroupDetailsPage({group} : GroupDetailsProps) {
   const credits = group?.groupSettlements.filter((settlement) => settlement.payeeId === userId);
   const debts = group?.groupSettlements.filter((settlement) => settlement.payerId === userId);
 
+  const handleSettle = async(userId: number, payerId : number) => {
+    try {
+      const req = [userId, payerId];
+      const res = await axios.post("/api/groupSettlement", req);
+      //do something here
+    } catch (error) {
+      console.error("error settling expenses: ", error);
+    }
+  }
+
   if (!group) {
     return <div className="min-h-screen bg-gray-50 flex items-center justify-center">Group not found</div>;
   }
 
   const handleExpenseClick = (detailedExpenses: ExpenseDetailsProps) => {
     setSelectedExpense(detailedExpenses);
+    // Filter settlements for the selected expense
+    const filteredSettlements = group.expenseSettlementDetails.filter(
+        (settlement) => settlement.expenseId === detailedExpenses.id
+    );
+    setSelectedSettlements(filteredSettlements);
     setIsExpensesDialogOpen(true);
   };
 
@@ -161,16 +180,21 @@ export default function GroupDetailsPage({group} : GroupDetailsProps) {
               <h3 className="text-lg font-bold">You are owed</h3>
               <div className="space-y-4">
                 {credits?.map((credit) => (
-                  <div key={credit.id} className="flex items-center space-x-4">
-                    <Avatar>
-                      <div className="bg-gray-200 w-8 h-8 rounded-full flex items-center justify-center">
-                        {credit.payer?.name.toString()[0].toUpperCase()}
+                  <div key={credit.id} className="flex justify-between ">
+                    <div className="flex space-x-4">
+                      <Avatar>
+                        <div className="bg-gray-200 w-8 h-8 rounded-full flex items-center justify-center">
+                          {credit.payer?.name.toString()[0].toUpperCase()}
+                        </div>
+                      </Avatar>
+                      <div>
+                        <p className="text-sm font-medium">{credit.payer?.name}</p>
+                        <p className="text-sm text-gray-500">{credit.amount}</p>
                       </div>
-                    </Avatar>
-                    <div>
-                      <p className="text-sm font-medium">{credit.payer?.name}</p>
-                      <p className="text-sm text-gray-500">{credit.amount}</p>
                     </div>
+                    {group.id &&
+                      <Button variant="secondary" onClick={() => handleSettle(userId, credit.payerId)}>Settle</Button>
+                    }
                   </div>
                 ))}
               </div>
@@ -257,6 +281,7 @@ export default function GroupDetailsPage({group} : GroupDetailsProps) {
       {selectedExpense && (
           <ExpenseDetailsDialog
             expense={selectedExpense}
+            settlementDetails={selectedSettlements}
             isOpen={isExpensesDialogOpen}
             onClose={() => setIsExpensesDialogOpen(false)}
           />

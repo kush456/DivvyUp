@@ -3,6 +3,9 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Avatar } from "@/components/ui/avatar";
+import { ExpenseSettlement, User } from "@prisma/client";
+import { useSession } from "next-auth/react";
+import axios from "axios";
 
 type ExpenseDetailsDialogProps = {
   expense: {
@@ -18,11 +21,37 @@ type ExpenseDetailsDialogProps = {
       weight: number;
     }[];
   };
+  settlementDetails: {
+    id: number;
+    groupId: number | null;
+    createdAt: Date;
+    amount: number;
+    payerId: number;
+    payeeId: number;
+    expenseId: number;
+    payer?: User;
+    payee?: User;
+    status: string;
+  }[];
   isOpen: boolean;
   onClose: () => void;
 };
 
-export default function ExpenseDetailsDialog({ expense, isOpen, onClose }: ExpenseDetailsDialogProps) {
+
+export default function ExpenseDetailsDialog({ expense, settlementDetails, isOpen, onClose }: ExpenseDetailsDialogProps) {
+  console.log("settlement details : ", settlementDetails);
+  const totalWeight = expense.participants.reduce((sum, p) => sum + p.weight,0);
+  const session = useSession();
+  const userId = session.data?.user.id || "0";
+
+  const handleSettle = async(settlement : ExpenseSettlement) => {
+    try {
+      const res = await axios.post("/api/settlements", settlement);
+      //do something here
+    } catch (error) {
+      console.error("error settling expenses: ", error);
+    }
+  }
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent>
@@ -52,8 +81,28 @@ export default function ExpenseDetailsDialog({ expense, isOpen, onClose }: Expen
                   <div>
                     <p className="text-sm font-medium">{participant.name}</p>
                     <p className="text-sm text-gray-500">
-                      Paid: {participant.amount.toFixed(2)} | Weight: {participant.weight}
+                      Paid: {participant.amount.toFixed(2)} | Weight: {participant.weight} | Balance : {(participant.amount - (participant.weight*expense.totalAmount)/(totalWeight)).toFixed(2)}
                     </p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div>
+            <strong>Settlements: </strong>
+            <ul className="mt-2 space-y-2">
+              {settlementDetails.map((settlement) => (
+                <li key={settlement.id} className="flex justify-between">
+                  <div>
+                    <p className="text-sm font-medium">{settlement.payer?.name} owes {settlement.payee?.name}</p>
+                    <p className="text-sm text-gray-500">
+                      Amount: {settlement.amount.toFixed(2)} | Status: {!(settlement.groupId) && settlement.status}
+                    </p>
+                  </div>
+                  <div>
+                    {!settlement.groupId && settlement.payeeId === parseInt(userId, 10) && settlement.status === 'unsettled' &&
+                      <Button variant="secondary" onClick={() => handleSettle(settlement)}>Settle</Button>
+                    }
                   </div>
                 </li>
               ))}
