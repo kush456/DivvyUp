@@ -8,17 +8,19 @@ import { getExpenseSettlementDetails } from "@/lib/utils/expenseUtils";
 
 
 
+type Params = Promise<{ groupId: string }>;
 
 
-export default async function GroupDetailHandler({ params }: { params: { groupId: string } }){
+export default async function GroupDetailHandler({ params }: { params: Params }){
+    const { groupId } = await params;
     const session = await getServerSession(authOptions);
     if(!session || !session.user){
         console.log("session not found ", session);
         return redirect("/api/auth/signin");
     }
-    const groupId = parseInt(params.groupId, 10) ;
-    const groupDetails = await getGroupDetails(groupId, session);
-    const expenses = await getGroupExpenses(groupId, session);
+    const IdOfGroup = parseInt(groupId, 10);
+    const groupDetails = await getGroupDetails(IdOfGroup, session);
+    const expenses = await getGroupExpenses(IdOfGroup, session);
     const groupExpenseSettlementDetails = await getExpenseSettlementDetails(session, expenses);
 
     if (!groupDetails || !groupDetails.id) {
