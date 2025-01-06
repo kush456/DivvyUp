@@ -1,8 +1,8 @@
 import AddExpenseForm from "@/components/forms/AddExpenseForm";
 import { getFriendsDetails } from "../../friends/page";
 import { getServerSession, Session } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { redirect } from "next/navigation";
+import { authOptions } from "@/lib/configs/auth/authOptions";
 
 
 export default async function AddExpensePage() {
