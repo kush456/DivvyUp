@@ -1,5 +1,5 @@
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import ExpensesPage from "@/components/pages/dashboard/Expenses";
+import { authOptions } from "@/lib/configs/auth/authOptions";
 import { Expense, ExpenseSettlement, PrismaClient } from "@prisma/client";
 import { getServerSession, Session } from "next-auth";
 import { redirect } from "next/navigation";

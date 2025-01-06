@@ -1,5 +1,5 @@
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import GroupsPage from "@/components/pages/dashboard/Groups";
+import { authOptions } from "@/lib/configs/auth/authOptions";
 import { PrismaClient } from "@prisma/client";
 import { getServerSession, Session } from "next-auth";
 import { redirect } from "next/navigation";

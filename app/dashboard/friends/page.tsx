@@ -1,8 +1,8 @@
 //do data fetching here from prisma and send it as props in the client component
 //do all data fetching first, see if it works =, then we will edit the component
 
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import FriendsPage from "@/components/pages/dashboard/Friends";
+import { authOptions } from "@/lib/configs/auth/authOptions";
 import prisma from "@/lib/prisma";
 import { PrismaClient } from "@prisma/client";
 

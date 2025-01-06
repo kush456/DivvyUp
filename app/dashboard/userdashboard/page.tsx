@@ -5,7 +5,7 @@ import { getGroupDetails } from "../groups/[groupId]/page";
 import { getGroupsDetails } from "../groups/page";
 import { getExpenses, getSettlementDetails } from "../expenses/page";
 import { getFriendsDetails } from "../friends/page";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/configs/auth/authOptions";
 
 
 export default async function(){

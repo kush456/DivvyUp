@@ -1,9 +1,9 @@
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import GroupDetailsPage from "@/components/pages/Group/GroupDetails";
 import { PrismaClient } from "@prisma/client";
 import { getServerSession, Session } from "next-auth";
 import { redirect } from "next/navigation";
 import { getExpenseSettlementDetails } from "../../expenses/page";
+import { authOptions } from "@/lib/configs/auth/authOptions";
 
 
 const prisma = new PrismaClient();
