@@ -47,6 +47,8 @@ async function handleReject(recieverId : number | null, senderId : number | null
     await rejectFriendRequest(recieverId, senderId);
 }
 
+
+
 export default function FriendsPage({ friends, friendRequests }: FriendsPageProps) {
 
     const [searchQuery, setSearchQuery] = useState("");
@@ -89,13 +91,11 @@ export default function FriendsPage({ friends, friendRequests }: FriendsPageProp
                             {friendRequests.map((friend) => (
                             <Card key={friend.id} className="p-4 flex items-center justify-between">
                                 <div className="flex items-center space-x-4">
-                                    <Avatar className="w-12 h-12">
-                                        <img
-                                        src={friend.avatar}
-                                        alt={friend.name}
-                                        className="w-12 h-12 rounded-full object-cover"
-                                        />
-                                    </Avatar>
+                                <Avatar>
+                                    <div className="bg-gray-200 w-8 h-8 rounded-full flex items-center justify-center">
+                                        {(friend.name) ? friend.name[0].toUpperCase() : 'NA'}
+                                    </div>
+                                </Avatar>
                                     <div>
                                         <p className="font-medium">{friend.name}</p>
                                         <p className="text-sm text-gray-600">{friend.email}</p>
@@ -118,23 +118,21 @@ export default function FriendsPage({ friends, friendRequests }: FriendsPageProp
                     <div className="space-y-4">
                     {filteredFriends.map((friend) => (
                         <Card
-                        key={friend.id}
-                        className="p-4 flex items-center justify-between cursor-pointer"
-                        onClick={() => setSelectedFriend(friend)}
+                            key={friend.id}
+                            className="p-4 flex items-center justify-between cursor-pointer"
+                            onClick={() => setSelectedFriend(friend)}
                         >
                         <div className="flex items-center space-x-4">
-                            <Avatar className="w-12 h-12">
-                            <img
-                                src={friend.avatar}
-                                alt={friend.name}
-                                className="w-12 h-12 rounded-full object-cover"
-                            />
+                            <Avatar>
+                                <div className="bg-gray-200 w-8 h-8 rounded-full flex items-center justify-center">
+                                    {(friend.name) ? friend.name[0].toUpperCase() : 'NA'}
+                                </div>
                             </Avatar>
                             <div>
-                            <p className="font-medium">{friend.name}</p>
-                            <p className="text-sm text-gray-600">
-                                Owes you ${friend.balance.toFixed(2)}
-                            </p>
+                                <p className="font-medium">{friend.name}</p>
+                                <p className="text-sm text-gray-600">
+                                    Owes you ₹{friend.balance.toFixed(2)}
+                                </p>
                             </div>
                         </div>
                         <Button variant="destructive">Remove</Button>

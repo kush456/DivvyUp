@@ -184,7 +184,7 @@ export default function DashboardPage({groups, settlements, friends, expenses}: 
 
         {/* Settlements Section */}
         <section className="mt-8">
-          <Button variant="link" className="text-xl font-semibold text-gray-700 p-0" onClick={() => router.push("./settle")}>Your Settlements {'>'}</Button>
+          <div className="text-xl font-semibold text-gray-700 p-0" >Your Settlements </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
             <div>
               <h4 className="font-semibold text-gray-800">Credits</h4>

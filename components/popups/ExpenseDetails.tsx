@@ -6,6 +6,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { ExpenseSettlement, User } from "@prisma/client";
 import { useSession } from "next-auth/react";
 import axios from "axios";
+import { useRouter } from "next/navigation";
 
 type ExpenseDetailsDialogProps = {
   expense: {
@@ -43,11 +44,13 @@ export default function ExpenseDetailsDialog({ expense, settlementDetails, isOpe
   const totalWeight = expense.participants.reduce((sum, p) => sum + p.weight,0);
   const session = useSession();
   const userId = session.data?.user.id || "0";
+  const router = useRouter();
 
   const handleSettle = async(settlement : ExpenseSettlement) => {
     try {
       const res = await axios.post("/api/settlements", settlement);
       //do something here
+      router.refresh();
     } catch (error) {
       console.error("error settling expenses: ", error);
     }

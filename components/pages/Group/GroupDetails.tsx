@@ -104,6 +104,7 @@ export default function GroupDetailsPage({group} : GroupDetailsProps) {
       const req = [userId, payerId];
       const res = await axios.post("/api/groupSettlement", req);
       //do something here
+      router.refresh();
     } catch (error) {
       console.error("error settling expenses: ", error);
     }

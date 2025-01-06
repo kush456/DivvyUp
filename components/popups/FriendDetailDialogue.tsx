@@ -40,16 +40,14 @@ export default function FriendDetailsDialog({
 
         {/* Content */}
         <div className="flex flex-col items-center space-y-4">
-          <Avatar className="w-16 h-16">
-            <img
-              src={friend.avatar}
-              alt={friend.name}
-              className="w-16 h-16 rounded-full object-cover"
-            />
+          <Avatar>
+              <div className="bg-gray-200 w-8 h-8 rounded-full flex items-center justify-center">
+                  {(friend.name) ? friend.name[0].toUpperCase() : 'NA'}
+              </div>
           </Avatar>
 
           <p className="text-gray-600">
-            Balance: <strong>${friend.balance.toFixed(2)}</strong>
+            Balance: <strong>₹{friend.balance.toFixed(2)}</strong>
           </p>
 
           <div>
@@ -71,9 +69,6 @@ export default function FriendDetailsDialog({
             onClick={() => alert("Friend removed!")}
           >
             Remove Friend
-          </Button>
-          <Button variant="secondary" onClick={onClose}>
-            Close
           </Button>
         </DialogFooter>
       </DialogContent>
