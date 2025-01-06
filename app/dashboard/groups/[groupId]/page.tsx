@@ -10,7 +10,7 @@ import { getExpenseSettlementDetails } from "@/lib/utils/expenseUtils";
 
 
 
-export default async function({ params }: { params: { groupId: string } }){
+export default async function GroupDetailHandler({ params }: { params: { groupId: string } }){
     const session = await getServerSession(authOptions);
     if(!session || !session.user){
         console.log("session not found ", session);

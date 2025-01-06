@@ -11,7 +11,6 @@ import { useRouter } from "next/navigation";
 import { ExpenseSettlement, GroupBalance, Settlement, User } from "@prisma/client";
 import { useSession } from "next-auth/react";
 import axios from "axios";
-import { getExpenseSettlementDetails } from "@/app/dashboard/expenses/page";
 
 type Members = {
   name: string;

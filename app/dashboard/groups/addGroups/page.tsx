@@ -1,8 +1,8 @@
 import AddGroupForm from "@/components/forms/AddGroupsForm";
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
-import { getFriendsDetails } from "../../friends/page";
 import { authOptions } from "@/lib/configs/auth/authOptions";
+import { getFriendsDetails } from "@/lib/utils/friendsUtils";
 
 export default async function(){
     const session = await getServerSession(authOptions);
