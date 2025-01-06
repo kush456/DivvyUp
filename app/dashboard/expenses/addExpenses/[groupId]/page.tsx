@@ -10,7 +10,7 @@ interface AddExpensePageProps {
   params: Promise<{ groupId: string }>; // Extract groupId from URL
 }
 
-export async function getGroupMembers(groupId: number) {
+async function getGroupMembers(groupId: number) {
     const group = await prisma.group.findUnique({
       where: { id: groupId },
       include: {
