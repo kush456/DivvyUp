@@ -1,11 +1,10 @@
 import DashboardPage from "@/components/pages/DashboardPage";
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
-import { getGroupDetails } from "../groups/[groupId]/page";
-import { getGroupsDetails } from "../groups/page";
-import { getExpenses, getSettlementDetails } from "../expenses/page";
-import { getFriendsDetails } from "../friends/page";
 import { authOptions } from "@/lib/configs/auth/authOptions";
+import { getGroupsDetails } from "@/lib/utils/groupUtils";
+import { getExpenses, getSettlementDetails } from "@/lib/utils/expenseUtils";
+import { getFriendsDetails } from "@/lib/utils/friendsUtils";
 
 
 export default async function(){

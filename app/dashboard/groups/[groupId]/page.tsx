@@ -1,88 +1,14 @@
 import GroupDetailsPage from "@/components/pages/Group/GroupDetails";
-import { PrismaClient } from "@prisma/client";
 import { getServerSession, Session } from "next-auth";
 import { redirect } from "next/navigation";
-import { getExpenseSettlementDetails } from "../../expenses/page";
 import { authOptions } from "@/lib/configs/auth/authOptions";
+import { getGroupDetails, getGroupExpenses } from "@/lib/utils/groupUtils";
+import { getExpenseSettlementDetails } from "@/lib/utils/expenseUtils";
 
 
-const prisma = new PrismaClient();
 
-export async function getGroupDetails(groupId: number, session: Session){
-    // Fetch group details
-    const groupDetails = await prisma.group.findUnique({
-        where: { id: groupId },
-        include: {
-          members: true,
-          expenses: {
-            include: {
-              participants: {
-                include : {
-                  user: true,
-                }
-              }
-            },
-          },
-          balances: true,
-          settlements: true,
-          groupSettlements: {
-            include : {
-                payer: true,
-                payee: true,
-            }
-          },
-        },
-    });
 
-    return groupDetails;
-}
 
-export async function getGroupExpenses(groupId: number, session : Session){
-    const userId = parseInt(session.user.id || "0");
-    //console.log(session);
-    //console.log("userId: " + userId);
-    if(userId === 0) return redirect("/api/auth/signin");
-
-    try{
-        const expenses = await prisma.expense.findMany({
-            where: {
-              groupId,
-            },
-            include: {
-                participants: {
-                    include: {
-                        user: true, // Fetch user details for participants
-                    },
-                },
-                group: true, // Include group details if necessary
-            },
-        });
-
-        const expenseDetails = expenses.map((expense) => {
-            
-            return {
-                id: expense.id,
-                description: expense.description,
-                totalAmount: expense.totalAmount,
-                createdAt: expense.createdAt,
-                group: expense.group?.name,
-                participants: expense.participants.map((participant) => {
-                    return {
-                        userId: participant.userId,
-                        name: participant.user?.name,
-                        amount : participant.paidAmount,
-                        weight : participant.weight
-                    };
-                }),
-            };
-        })
-
-        return expenseDetails;
-    } catch(error){
-        console.error("Error fetching expenses:", error);
-        throw new Error("Failed to fetch expenses");
-    }
-}
 
 export default async function({ params }: { params: { groupId: string } }){
     const session = await getServerSession(authOptions);
