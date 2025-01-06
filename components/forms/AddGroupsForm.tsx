@@ -126,12 +126,12 @@ export default function AddGroupForm({ friends }: AddGroupFormProps) {
       </div>
 
       {/* Member List */}
-      <div className="space-y-2 mt-4">
+      <div className="space-y-2 mt-4 flex flex-col items-center">
         {members.map((member) => (
           <div key={member.id} className="flex gap-4 items-center">
             <span>{member.name}</span>
             <Button
-              variant="destructive"
+              variant="secondary"
               type="button"
               onClick={() => removeMember(member.id)}
             >

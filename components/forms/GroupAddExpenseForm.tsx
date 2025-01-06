@@ -159,7 +159,7 @@ export default function GroupAddExpenseForm({ groupId, members }: AddExpenseForm
       </div>
 
       {/* Participant List */}
-      <div className="space-y-2 mt-4">
+      <div className="space-y-2 mt-4 ml-20">
         {participants.map((participant) => (
           <div key={participant.userId} className="flex gap-4 items-center">
             <span>{participant.name}</span>

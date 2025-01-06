@@ -198,7 +198,7 @@ export default function AddExpenseForm({friends} : AddExpenseFormProps){
         </div>
 
         {/* Participant List */}
-        <div className="space-y-2 mt-4">
+        <div className="space-y-2 mt-4 ml-20">
             {participants.map((participant) => (
             <div key={participant.id} className="flex gap-4 items-center">
                 <span>{participant.name}</span>
