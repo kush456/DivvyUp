@@ -5,6 +5,7 @@ import { signOut, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import AppBar from "../AppBar";
 import axios from "axios";
+import SignOutButton from "@/components/Buttons/SignOutButton";
 
 export default function UserDetailsPage() {
   const { data: session } = useSession();
@@ -83,13 +84,10 @@ export default function UserDetailsPage() {
                     {loading ? "Updating..." : "Update Details"}
                     </button>
                 </div>
-
-                <p
-                    onClick={() => router.push("/change-password")}
-                    className="mt-4 text-blue-500 hover:underline cursor-pointer"
-                >
-                    Change Password
-                </p>
+                <div className="mt-2">
+                  <SignOutButton/>
+                </div>
+                
 
             {message && <p className="mt-4 text-green-500">{message}</p>}
         </div>
