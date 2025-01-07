@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -14,71 +8,71 @@ datasource db {
 }
 
 model User {
-  id         Int       @id @default(autoincrement())
-  name       String
-  email      String    @unique
-  password   String
-  friends    Friend[]  @relation("UserIsFriend") // Updated relation name
-  friendOf   Friend[]  @relation("FriendOfUser") // New relation for "friendId"
-  groups     Group[]   @relation("GroupMemberships")
-  balances  GroupBalance[]  @relation("UserToBalances")
-  settlementsPayer   Settlement[] @relation("SettlementPayer") // Settlements as a payer
-  settlementsPayee   Settlement[] @relation("SettlementPayee") // Settlements as a payee
-  groupSettlementsPayer GroupSettlement[] @relation("GroupSettlementPayer") // Settlements as a pay
-  groupSettlementsPayee GroupSettlement[] @relation("GroupSettlementPayee") // Settlements as a payee
-  expenseSettlementsPayer ExpenseSettlement[] @relation("ExpenseSettlementPayer")
+  id                      Int                 @id @default(autoincrement())
+  name                    String
+  email                   String              @unique
+  password                String
+  createdAt               DateTime            @default(now())
+  updatedAt               DateTime            @updatedAt
   expenseSettlementsPayee ExpenseSettlement[] @relation("ExpenseSettlementPayee")
-  participants Participant[]
-  sentFriendRequests  FriendRequest[]  @relation("SenderRequests")
-  receivedFriendRequests FriendRequest[] @relation("ReceiverRequests")
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
+  expenseSettlementsPayer ExpenseSettlement[] @relation("ExpenseSettlementPayer")
+  friendOf                Friend[]            @relation("FriendOfUser")
+  friends                 Friend[]            @relation("UserIsFriend")
+  receivedFriendRequests  FriendRequest[]     @relation("ReceiverRequests")
+  sentFriendRequests      FriendRequest[]     @relation("SenderRequests")
+  balances                GroupBalance[]      @relation("UserToBalances")
+  groupSettlementsPayee   GroupSettlement[]   @relation("GroupSettlementPayee")
+  groupSettlementsPayer   GroupSettlement[]   @relation("GroupSettlementPayer")
+  participants            Participant[]
+  settlementsPayee        Settlement[]        @relation("SettlementPayee")
+  settlementsPayer        Settlement[]        @relation("SettlementPayer")
+  groups                  Group[]             @relation("GroupMemberships")
 }
 
 model Friend {
-  id        Int   @id @default(autoincrement())
+  id        Int      @id @default(autoincrement())
   userId    Int
   friendId  Int
-  user      User  @relation("UserIsFriend", fields: [userId], references: [id]) // Updated relation name
-  friend    User  @relation("FriendOfUser", fields: [friendId], references: [id]) // Updated relation name
   createdAt DateTime @default(now())
+  friend    User     @relation("FriendOfUser", fields: [friendId], references: [id])
+  user      User     @relation("UserIsFriend", fields: [userId], references: [id])
 
-  @@unique([userId, friendId]) // Prevents duplicate friendships
+  @@unique([userId, friendId])
 }
 
 model FriendRequest {
   id         Int      @id @default(autoincrement())
   senderId   Int
   receiverId Int
-  sender     User     @relation("SenderRequests", fields: [senderId], references: [id])
-  receiver   User     @relation("ReceiverRequests", fields: [receiverId], references: [id])
-  status     String   @default("pending") // Can be 'pending', 'accepted', or 'rejected'
+  status     String   @default("pending")
   createdAt  DateTime @default(now())
+  receiver   User     @relation("ReceiverRequests", fields: [receiverId], references: [id])
+  sender     User     @relation("SenderRequests", fields: [senderId], references: [id])
 
-  @@unique([senderId, receiverId]) // Prevents duplicate requests
+  @@unique([senderId, receiverId])
 }
 
 model Group {
-  id        Int       @id @default(autoincrement())
-  name      String
-  members   User[]    @relation("GroupMemberships")
-  expenses  Expense[] @relation("GroupExpenses")
-  settlements Settlement[]
-  balances    GroupBalance[]  @relation("GroupToBalances")
-  groupSettlements GroupSettlement[] @relation("GroupSettlement")
-  expenseSettlements ExpenseSettlement[] @relation("GroupToExpenseSettlement") // Relation to ExpenseSettlement
-  createdAt DateTime  @default(now())
+  id                 Int                 @id @default(autoincrement())
+  name               String
+  createdAt          DateTime            @default(now())
+  expenses           Expense[]           @relation("GroupExpenses")
+  expenseSettlements ExpenseSettlement[] @relation("GroupToExpenseSettlement")
+  balances           GroupBalance[]      @relation("GroupToBalances")
+  groupSettlements   GroupSettlement[]   @relation("GroupSettlement")
+  settlements        Settlement[]
+  members            User[]              @relation("GroupMemberships")
 }
 
 model GroupBalance {
-  id        Int     @id @default(autoincrement())
-  groupId   Int
-  group     Group   @relation(fields: [groupId], references: [id], name: "GroupToBalances")
-  userId    Int
-  user      User    @relation(fields: [userId], references: [id], name: "UserToBalances")
-  balance   Float   @default(0)
+  id      Int   @id @default(autoincrement())
+  groupId Int
+  userId  Int
+  balance Float @default(0)
+  group   Group @relation("GroupToBalances", fields: [groupId], references: [id])
+  user    User  @relation("UserToBalances", fields: [userId], references: [id])
 
-  @@unique([groupId, userId]) //This helps us in where checks!!!!
+  @@unique([groupId, userId])
 }
 
 model GroupSettlement {
@@ -87,24 +81,24 @@ model GroupSettlement {
   payerId   Int
   payeeId   Int
   amount    Float
-  group     Group    @relation("GroupSettlement", fields: [groupId], references: [id])
-  payer     User     @relation("GroupSettlementPayer", fields: [payerId], references: [id])
-  payee     User     @relation("GroupSettlementPayee", fields: [payeeId], references: [id])
   createdAt DateTime @default(now())
+  group     Group    @relation("GroupSettlement", fields: [groupId], references: [id])
+  payee     User     @relation("GroupSettlementPayee", fields: [payeeId], references: [id])
+  payer     User     @relation("GroupSettlementPayer", fields: [payerId], references: [id])
 
   @@unique([payerId, payeeId, groupId])
 }
 
 model Expense {
-  id          Int       @id @default(autoincrement())
-  totalAmount Float
-  description String
-  splitType   String
-  groupId     Int?
-  group       Group?    @relation("GroupExpenses", fields: [groupId], references: [id])
-  participants Participant[]
-  expenseSettlements ExpenseSettlement[] @relation("ExpenseSettlements") // Relation to ExpenseSettlement
-  createdAt   DateTime  @default(now())
+  id                 Int                 @id @default(autoincrement())
+  description        String
+  groupId            Int?
+  createdAt          DateTime            @default(now())
+  splitType          String
+  totalAmount        Float
+  group              Group?              @relation("GroupExpenses", fields: [groupId], references: [id])
+  expenseSettlements ExpenseSettlement[] @relation("ExpenseSettlements")
+  participants       Participant[]
 }
 
 model Participant {
@@ -116,34 +110,34 @@ model Participant {
   expense    Expense @relation(fields: [expenseId], references: [id])
   user       User    @relation(fields: [userId], references: [id])
 
-  @@unique([expenseId, userId]) // Ensures a user is only added once per expense
+  @@unique([expenseId, userId])
 }
 
 model Settlement {
-  id          Int      @id @default(autoincrement())
-  amount      Float
-  payerId     Int
-  payeeId     Int
-  payer       User     @relation("SettlementPayer", fields: [payerId], references: [id])
-  payee       User     @relation("SettlementPayee", fields: [payeeId], references: [id])
-  groupId     Int?
-  group       Group?   @relation(fields: [groupId], references: [id])
-  createdAt   DateTime @default(now())
+  id        Int      @id @default(autoincrement())
+  amount    Float
+  payerId   Int
+  payeeId   Int
+  groupId   Int?
+  createdAt DateTime @default(now())
+  group     Group?   @relation(fields: [groupId], references: [id])
+  payee     User     @relation("SettlementPayee", fields: [payeeId], references: [id])
+  payer     User     @relation("SettlementPayer", fields: [payerId], references: [id])
 }
 
 model ExpenseSettlement {
-  id         Int      @id @default(autoincrement())
-  expenseId  Int
-  payerId    Int
-  payeeId    Int
-  status     String   @default("unsettled")
-  groupId    Int?
-  group      Group?   @relation("GroupToExpenseSettlement", fields: [groupId], references: [id])
-  amount     Float
-  expense    Expense  @relation("ExpenseSettlements", fields: [expenseId], references: [id])
-  payer      User     @relation("ExpenseSettlementPayer", fields: [payerId], references: [id])
-  payee      User     @relation("ExpenseSettlementPayee", fields: [payeeId], references: [id])
-  createdAt  DateTime @default(now())
+  id        Int      @id @default(autoincrement())
+  expenseId Int
+  payerId   Int
+  payeeId   Int
+  amount    Float
+  createdAt DateTime @default(now())
+  groupId   Int?
+  status    String   @default("unsettled")
+  expense   Expense  @relation("ExpenseSettlements", fields: [expenseId], references: [id])
+  group     Group?   @relation("GroupToExpenseSettlement", fields: [groupId], references: [id])
+  payee     User     @relation("ExpenseSettlementPayee", fields: [payeeId], references: [id])
+  payer     User     @relation("ExpenseSettlementPayer", fields: [payerId], references: [id])
 
-  @@unique([expenseId, payerId, payeeId]) // Ensures unique settlements for an expense between specific users
+  @@unique([expenseId, payerId, payeeId])
 }
