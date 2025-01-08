@@ -34,23 +34,6 @@ type FriendsPageProps = {
     friends: Friend[];
     friendRequests: FriendRequest[];
 };
-const router = useRouter();
-async function handleAccept(recieverId : number | null, senderId : number | null){
-    //first add the friend(both ways)
-    //then a request that updates the status of that friend request, further deletes it then
-    console.log("recieverId on client side " + recieverId);
-    await acceptFriendRequest(recieverId, senderId);
-    router.refresh();
-    
-}
-
-async function handleReject(recieverId : number | null, senderId : number | null){
-    //in this case update status to rejected
-    //further delete the entry from the database
-    await rejectFriendRequest(recieverId, senderId);
-    router.refresh();
-}
-
 
 
 export default function FriendsPage({ friends, friendRequests }: FriendsPageProps) {
@@ -58,6 +41,23 @@ export default function FriendsPage({ friends, friendRequests }: FriendsPageProp
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedFriend, setSelectedFriend] = useState<Friend | null>(null);
     const {data : session, status} = useSession();
+    const router = useRouter();
+
+    async function handleAccept(recieverId : number | null, senderId : number | null){
+        //first add the friend(both ways)
+        //then a request that updates the status of that friend request, further deletes it then
+        console.log("recieverId on client side " + recieverId);
+        await acceptFriendRequest(recieverId, senderId);
+        router.refresh();
+        
+    }
+
+    async function handleReject(recieverId : number | null, senderId : number | null){
+        //in this case update status to rejected
+        //further delete the entry from the database
+        await rejectFriendRequest(recieverId, senderId);
+        router.refresh();
+    }
 
     const recieverId = status === "authenticated" && session?.user?.id
         ? parseInt(session.user.id) // Convert to integer
