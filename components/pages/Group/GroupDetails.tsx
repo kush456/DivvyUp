@@ -169,7 +169,7 @@ export default function GroupDetailsPage({group} : GroupDetailsProps) {
                     </Avatar>
                     <div>
                       <p className="text-sm font-medium">{debt.payee?.name}</p>
-                      <p className="text-sm text-gray-500">{debt.amount}</p>
+                      <p className="text-sm text-gray-500">{debt.amount.toFixed(2)}</p>
                     </div>
                   </div>
                 ))}
@@ -189,7 +189,7 @@ export default function GroupDetailsPage({group} : GroupDetailsProps) {
                       </Avatar>
                       <div>
                         <p className="text-sm font-medium">{credit.payer?.name}</p>
-                        <p className="text-sm text-gray-500">{credit.amount}</p>
+                        <p className="text-sm text-gray-500">{credit.amount.toFixed(2)}</p>
                       </div>
                     </div>
                     {group.id &&

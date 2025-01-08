@@ -11,6 +11,7 @@ import AddFriendDialog from "@/components/popups/AddFriendDialog";
 import axios from "axios";
 import { acceptFriendRequest, rejectFriendRequest } from "@/lib/friends";
 import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 
 type Friend = {
@@ -33,18 +34,21 @@ type FriendsPageProps = {
     friends: Friend[];
     friendRequests: FriendRequest[];
 };
-
+const router = useRouter();
 async function handleAccept(recieverId : number | null, senderId : number | null){
     //first add the friend(both ways)
     //then a request that updates the status of that friend request, further deletes it then
     console.log("recieverId on client side " + recieverId);
     await acceptFriendRequest(recieverId, senderId);
+    router.refresh();
+    
 }
 
 async function handleReject(recieverId : number | null, senderId : number | null){
     //in this case update status to rejected
     //further delete the entry from the database
     await rejectFriendRequest(recieverId, senderId);
+    router.refresh();
 }
 
 
